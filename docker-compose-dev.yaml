@@ -8,9 +8,7 @@ services:
           ignore:
             - node_modules/
         - action: rebuild
-          path: package.json
-        - action: rebuild
-          path: bun.lock*
+          path: ./web/package.json
     build:
       context: ./web/
       dockerfile: dev.Dockerfile
@@ -32,9 +30,7 @@ services:
           ignore:
             - node_modules/
         - action: rebuild
-          path: package.json
-        - action: rebuild
-          path: bun.lock*
+          path: ./backend/package.json
     build:
       context: ./backend/
       dockerfile: Dockerfile

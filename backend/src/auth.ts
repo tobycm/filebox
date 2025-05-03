@@ -1,4 +1,5 @@
-import { betterAuth } from "better-auth";
+import { betterAuth, BetterAuthPlugin } from "better-auth";
+import { magicLink, openAPI, username } from "better-auth/plugins";
 
 import { Pool } from "pg";
 import smtp from "./email";
@@ -8,7 +9,44 @@ if (!process.env.POSTGRES_URL) {
   throw new Error("POSTGRES_URL is not set");
 }
 
+const plugins: BetterAuthPlugin[] = [];
+
+if (yes(process.env.BETTER_AUTH_ENABLE_USERNAME))
+  plugins.push(
+    username({
+      minUsernameLength: 2,
+      usernameValidator(username) {
+        if (username === "admin") {
+          return false;
+        }
+        return true;
+      },
+    })
+  );
+
+if (yes(process.env.BETTER_AUTH_ENABLE_MAGIC_LINK))
+  plugins.push(
+    magicLink({
+      async sendMagicLink(data, request) {
+        if (!smtp) {
+          throw new Error("SMTP is not enabled");
+        }
+
+        const { email, url } = data;
+
+        await smtp.sendMail({
+          from: process.env.SMTP_FROM || "Filebox <filebox@localhost>",
+          to: email,
+          subject: "Filebox - Magic Link",
+          text: `Hello ${email},\n\nTo sign in, please use the link below:\n\n${url}\n\nIf you did not request this email, please ignore it.\n\nThank you,\nFilebox`,
+        });
+      },
+    })
+  );
+
 export const auth = betterAuth({
+  plugins: [openAPI(), ...plugins],
+
   appName: "filebox",
   account: {
     accountLinking: {
@@ -33,12 +71,38 @@ export const auth = betterAuth({
 
       const { user, url } = data;
 
-      smtp.sendMail({
+      await smtp.sendMail({
         from: process.env.SMTP_FROM || "Filebox <filebox@localhost>",
         to: user.email,
+
         subject: "Filebox - Reset your password",
-        text: `Hello ${user.name},\n\nTo reset your password, please click the link below:\n\n${url}\n\nIf you did not request this email, please ignore it.\n\nThank you,\nFilebox`,
+        text: `Hello ${user.name},\n\nTo reset your password, please use the link below:\n\n${url}\n\nIf you did not request this email, please ignore it.\n\nThank you,\nFilebox`,
       });
     },
   },
+  basePath: "/auth",
 });
+
+let _schema: ReturnType<typeof auth.api.generateOpenAPISchema>;
+const getSchema = async () => (_schema ??= auth.api.generateOpenAPISchema());
+
+export const OpenAPI = {
+  getPaths: (prefix = "/auth/api") =>
+    getSchema().then(({ paths }) => {
+      const reference: typeof paths = Object.create(null);
+
+      for (const path of Object.keys(paths)) {
+        const key = prefix + path;
+        reference[key] = paths[path];
+
+        for (const method of Object.keys(paths[path])) {
+          const operation = (reference[key] as any)[method];
+
+          operation.tags = ["Better Auth"];
+        }
+      }
+
+      return reference;
+    }) as Promise<any>,
+  components: getSchema().then(({ components }) => components) as Promise<any>,
+} as const;

@@ -1,15 +1,15 @@
 # filebox
 
-To install dependencies:
+![filebox logo](./web/public/logo.svg)
+
+a soon to be pretty good file sharing service
+
+to run:
 
 ```bash
-bun install
+docker compose -f docker-compose-dev.yaml up
 ```
 
-To run:
+you can add `--watch` to hot restart the docker container
 
-```bash
-bun run index.ts
-```
-
-This project was created using `bun init` in bun v1.2.6. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+this project was created using `bun init` in bun v1.2.6. [bun](https://bun.sh) is a fast all-in-one js runtime.

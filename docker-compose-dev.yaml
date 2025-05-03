@@ -1,0 +1,71 @@
+services:
+  web:
+    develop:
+      watch:
+        - action: sync
+          path: ./web
+          target: /app/
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json
+        - action: rebuild
+          path: bun.lock*
+    build:
+      context: ./web/
+      dockerfile: dev.Dockerfile
+    container_name: filebox-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - snuggle-net
+
+  backend:
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./backend
+          target: /app/
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json
+        - action: rebuild
+          path: bun.lock*
+    build:
+      context: ./backend/
+      dockerfile: Dockerfile
+    container_name: filebox-backend
+    restart: unless-stopped
+    environment:
+      POSTGRES_URL: postgresql://mycutieuser:supersecretnyaa123@db:5432/fileboxdb
+    ports:
+      - "3456:3456"
+    depends_on:
+      - db
+    networks:
+      - snuggle-net
+
+  db:
+    image: postgres:17
+    container_name: filebox-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mycutieuser
+      POSTGRES_PASSWORD: supersecretnyaa123
+      POSTGRES_DB: fileboxdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - snuggle-net
+
+volumes:
+  pgdata:
+
+networks:
+  snuggle-net:

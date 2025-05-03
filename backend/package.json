@@ -2,15 +2,20 @@
   "name": "backend",
   "version": "1.0.50",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "bun run src/index.ts",
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
     "@elysiajs/cors": "^1.2.0",
     "@elysiajs/swagger": "^1.2.2",
-    "elysia": "latest"
+    "better-auth": "^1.2.7",
+    "elysia": "latest",
+    "nodemailer": "^7.0.0",
+    "pg": "^8.15.6"
   },
   "devDependencies": {
+    "@types/nodemailer": "^6.4.17",
+    "@types/pg": "^8.11.14",
     "bun-types": "latest"
   },
   "module": "src/index.js"

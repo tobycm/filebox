@@ -1,11 +1,10 @@
 import {} from "better-auth/client";
-import { createAuthClient } from "better-auth/react";
 import { createContext, useContext } from "react";
-import { APIClient } from "../main";
+import { APIClient, AuthClient } from "../main";
 
 export interface AppContextInterface {
   api: APIClient;
-  auth: ReturnType<typeof createAuthClient>;
+  auth: AuthClient;
 }
 
 const AppContext = createContext<AppContextInterface | undefined>(undefined);

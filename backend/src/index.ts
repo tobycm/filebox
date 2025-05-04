@@ -23,7 +23,7 @@ const app = new Elysia()
       },
     })
   )
-  .get("/", () => "Hello Elysia")
+  .get("/", () => "Hello Elysia and Filebox!")
   .get("/favicon.ico", () => Bun.file("./assets/favicon.ico"))
   .get(
     "/config/:keysString",

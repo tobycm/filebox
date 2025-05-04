@@ -1,32 +1,19 @@
-import { treaty } from "@elysiajs/eden";
-import { MantineProvider } from "@mantine/core";
+import { createTheme, MantineProvider } from "@mantine/core";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router";
 import App from "./App.tsx";
-import "./index.css";
 
 import "@mantine/core/styles.css";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { usernameClient } from "better-auth/client/plugins";
-import { createAuthClient } from "better-auth/react";
-import type { FileboxAPI } from "../../backend/src/index";
+import Redirect from "./components/Redirect.tsx";
 import AppContext from "./contexts/APIContext.tsx";
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-const client = treaty<FileboxAPI>("localhost:3456");
-
-export type APIClient = typeof client;
-
-const auth = createAuthClient({
-  basePath: "/auth",
-  baseURL: import.meta.env.VITE_API_URL,
-  plugins: [usernameClient()],
-});
-
-export type AuthClient = typeof auth;
+import { api } from "./lib/api/index";
+import { auth } from "./lib/auth/index";
+import Auth from "./pages/Auth/index.tsx";
+import SignIn from "./pages/Auth/SignIn.tsx";
+import SignUp from "./pages/Auth/SignUp.tsx";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,14 +24,22 @@ const queryClient = new QueryClient({
   },
 });
 
+const theme = createTheme({});
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <AppContext.Provider value={{ api: client, auth }}>
-        <MantineProvider>
+      <AppContext.Provider value={{ api, auth }}>
+        <MantineProvider theme={theme} withCssVariables withGlobalClasses withStaticClasses>
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<App />} />
+
+              <Route path="auth" element={<Auth />}>
+                <Route index element={<Redirect to="/auth/signin" />} />
+                <Route path="signin" element={<SignIn />} />
+                <Route path="signup" element={<SignUp />} />
+              </Route>
             </Routes>
           </BrowserRouter>
         </MantineProvider>

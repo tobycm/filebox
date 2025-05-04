@@ -1,41 +1,42 @@
-import { useQuery } from "@tanstack/react-query";
-import "./App.css";
+import { FileInput, Flex, Loader, Title } from "@mantine/core";
 import { useAppContext } from "./contexts/APIContext";
+import { uploadFiles } from "./lib/api";
+
+import { useState } from "react";
+import "./css/center.css";
 
 export default function App() {
   const { api } = useAppContext();
 
-  const config = useQuery({
-    queryKey: ["config", "allowAnonymous"],
-    queryFn: () => api.config({ keysString: "allowAnonymous" }).get(),
-  });
+  const [uploading, setUploading] = useState(false);
 
   return (
-    <>
-      <h1>Welcome to the React App</h1>
-      {!config.isFetched && <p>Loading...</p>}
-      {config.isFetched && (
-        <>
-          <p>Config: </p>
-          <pre>
-            <code>{JSON.stringify(config.data!.data, null, 2)}</code>
-          </pre>
-        </>
-      )}
-      <input
-        type="file"
-        id="files"
-        name="files"
-        multiple
-        onChange={(event) => {
-          const files = event.target.files;
-          if (!files) return;
+    <Flex className="center" direction="column" gap="lg">
+      <Title order={1}>Filebox</Title>
+      {!uploading && (
+        <FileInput
+          name="files"
+          placeholder="Select files to upload"
+          accept="*/*"
+          multiple
+          onChange={async (files) => {
+            if (!files) return;
 
-          api.upload.post({ files });
-        }}
-      />
-      <br />
-      <br />
-    </>
+            setUploading(true);
+
+            await uploadFiles(api, files);
+
+            setUploading(false);
+          }}
+        />
+      )}
+
+      {uploading && (
+        <Flex direction="column" align="center">
+          <Loader />
+          <Title order={3}>Uploading...</Title>
+        </Flex>
+      )}
+    </Flex>
   );
 }

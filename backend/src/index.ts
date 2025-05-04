@@ -1,8 +1,12 @@
 import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
+import { s3 } from "bun";
 import { Elysia, t } from "elysia";
-import { auth, OpenAPI as AuthOpenAPI } from "./auth";
+import { OpenAPI as AuthOpenAPI, elysiaAuthMiddleware } from "./auth";
 import config from "./config";
+import { FileModel } from "./models";
+
+// console.log(s3.accessKeyId);
 
 const app = new Elysia()
   .use(cors())
@@ -20,9 +24,7 @@ const app = new Elysia()
     })
   )
   .get("/", () => "Hello Elysia")
-  .get("/favicon.ico", () => {
-    return new Response(Bun.file("./assets/favicon.ico"));
-  })
+  .get("/favicon.ico", () => Bun.file("./assets/favicon.ico"))
   .get(
     "/config/:keysString",
     ({ params }) => {
@@ -43,16 +45,40 @@ const app = new Elysia()
     }
   )
 
-  .mount(auth.handler)
+  .use(elysiaAuthMiddleware)
+  .use(FileModel)
+
   .post(
     "/upload",
-    async ({ body }) => {
-      const files = body.files as File[];
-
-      return { files };
+    async ({ body, error, user }) => {
+      return body.map((file) => ({
+        url: s3.presign(`/data/${user.id}/${file.path}/${file.name}`, {
+          method: "PUT",
+          expiresIn: 60 * 60 * 24 * 7,
+        }),
+        ...file,
+      }));
     },
-    { body: t.Object({ files: t.Files() }) }
+    {
+      auth: true,
+
+      body: "File[]",
+      response: "S3File[]",
+    }
   )
+
+  .get(
+    "/list",
+    async ({ user }) => {
+      const files = await s3.list({ prefix: `/data/${user.id}/` });
+
+      return files.contents;
+    },
+    {
+      auth: true,
+    }
+  )
+
   .listen(3456);
 
 console.log(`🦊 Elysia is running at http://${app.server?.hostname}:${app.server?.port}`);

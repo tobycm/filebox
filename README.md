@@ -1,6 +1,6 @@
 # filebox
 
-![filebox logo](./web/public/logo.svg)
+<img src="./web/public/logo.svg" alt="filebox" width="200"/>
 
 a soon to be pretty good file sharing service
 

@@ -35,8 +35,6 @@ services:
       POSTGRES_USER: mycutieuser
       POSTGRES_PASSWORD: supersecretnyaa123
       POSTGRES_DB: fileboxdb
-    ports:
-      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:

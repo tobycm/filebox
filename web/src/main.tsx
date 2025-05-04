@@ -1,8 +1,11 @@
 import { treaty } from "@elysiajs/eden";
+import { MantineProvider } from "@mantine/core";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+
+import "@mantine/core/styles.css";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createAuthClient } from "better-auth/react";
@@ -33,7 +36,9 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AppContext.Provider value={{ api: client, auth }}>
-        <App />
+        <MantineProvider>
+          <App />
+        </MantineProvider>
       </AppContext.Provider>
     </QueryClientProvider>
   </StrictMode>

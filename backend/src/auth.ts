@@ -1,6 +1,7 @@
 import { betterAuth, BetterAuthPlugin } from "better-auth";
-import { magicLink, openAPI, username } from "better-auth/plugins";
+import { anonymous, magicLink, openAPI, username } from "better-auth/plugins";
 
+import Elysia from "elysia";
 import { Pool } from "pg";
 import smtp from "./email";
 import { yes } from "./utils";
@@ -10,6 +11,13 @@ if (!process.env.POSTGRES_URL) {
 }
 
 const plugins: BetterAuthPlugin[] = [];
+
+if (yes(process.env.ALLOW_ANONYMOUS))
+  plugins.push(
+    anonymous({
+      emailDomainName: process.env.ANONYMOUS_EMAIL_DOMAIN_NAME,
+    })
+  );
 
 if (yes(process.env.BETTER_AUTH_ENABLE_USERNAME))
   plugins.push(
@@ -87,7 +95,7 @@ let _schema: ReturnType<typeof auth.api.generateOpenAPISchema>;
 const getSchema = async () => (_schema ??= auth.api.generateOpenAPISchema());
 
 export const OpenAPI = {
-  getPaths: (prefix = "/auth/api") =>
+  getPaths: (prefix = "/auth") =>
     getSchema().then(({ paths }) => {
       const reference: typeof paths = Object.create(null);
 
@@ -106,3 +114,18 @@ export const OpenAPI = {
     }) as Promise<any>,
   components: getSchema().then(({ components }) => components) as Promise<any>,
 } as const;
+
+export const elysiaAuthMiddleware = new Elysia({ name: "better-auth" }).mount(auth.handler).macro({
+  auth: {
+    async resolve({ error, request: { headers } }) {
+      const session = await auth.api.getSession({ headers });
+
+      if (!session) return error(401);
+
+      return {
+        user: session.user,
+        session: session.session,
+      };
+    },
+  },
+});

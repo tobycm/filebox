@@ -1,23 +1,41 @@
-import { Box, Button, Image, Title } from "@mantine/core";
+import { Button, Flex, Image } from "@mantine/core";
 import { useNavigate } from "react-router";
 import { useAppContext } from "../../contexts/APIContext";
+
+import { useQuery } from "@tanstack/react-query";
+import "../../css/center.css";
 
 export default function ContinueAs() {
   const navigate = useNavigate();
 
   const { auth } = useAppContext();
 
-  const { data } = auth.useSession();
+  const session = useQuery({
+    queryKey: ["session"],
+    queryFn: () => auth.getSession(),
+  });
+
+  const { data } = session.data!;
 
   return (
-    <Box>
-      <Image src={data!.user.image} alt="User profile picture" radius="xl" height="30vh" />
+    <Flex className="center" direction="column" gap="lg">
+      <Image src={data!.user.image} fallbackSrc="/mouse.svg" alt="User profile picture" radius="xl" h="25vh" w="auto" />
 
-      <Title order={1}>You are logged in as {data?.user?.name || data?.user?.displayUsername || data?.user?.username || data?.user?.email}</Title>
-
-      <Button size="lg" mt="xl" onClick={() => navigate("/")}>
-        Continue
+      <Button size="lg" mt="md" onClick={() => navigate("/")}>
+        Continue as {data?.user?.name || data?.user?.displayUsername || data?.user?.username || data?.user?.email}
       </Button>
-    </Box>
+
+      <Button
+        size="lg"
+        mt="xl"
+        variant="outline"
+        color="red"
+        onClick={() => {
+          auth.signOut();
+          navigate("/auth/signin");
+        }}>
+        Sign out
+      </Button>
+    </Flex>
   );
 }

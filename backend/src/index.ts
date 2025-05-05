@@ -5,11 +5,17 @@ import { Elysia, t } from "elysia";
 import { OpenAPI as AuthOpenAPI, elysiaAuthMiddleware } from "./auth";
 import config from "./config";
 import { FileModel } from "./models";
+import { joinPath } from "./utils";
 
 // console.log(s3.accessKeyId);
 
 const app = new Elysia()
-  .use(cors())
+  .use(
+    cors({
+      origin: process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",") || [],
+      credentials: true,
+    })
+  )
   .use(
     swagger({
       documentation: {
@@ -50,9 +56,9 @@ const app = new Elysia()
 
   .post(
     "/upload",
-    async ({ body, error, user }) => {
+    async ({ body, user }) => {
       return body.map((file) => ({
-        url: s3.presign(`/data/${user.id}/${file.path}/${file.name}`, {
+        url: s3.presign(joinPath("data", user.id, file.path, file.name), {
           method: "PUT",
           expiresIn: 60 * 60 * 24 * 7,
         }),
@@ -70,9 +76,21 @@ const app = new Elysia()
   .get(
     "/list",
     async ({ user }) => {
-      const files = await s3.list({ prefix: `/data/${user.id}/` });
+      const files = await s3.list({ prefix: `data/${user.id}/` });
 
-      return files.contents;
+      if (!files.contents) return [];
+
+      return files.contents.map((file) => {
+        const newFile = {
+          ...file,
+          url: s3.presign(file.key, {
+            method: "GET",
+            expiresIn: 60 * 60 * 24 * 7,
+          }),
+        };
+
+        return newFile;
+      });
     },
     {
       auth: true,

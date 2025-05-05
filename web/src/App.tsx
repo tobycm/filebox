@@ -14,7 +14,6 @@ import "./css/center.css";
 export default function App() {
   const { api } = useAppContext();
 
-  const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [uploadProgress, setUploadProgress] = useState({
     loaded: 0,
@@ -25,6 +24,8 @@ export default function App() {
     queryKey: ["files"],
     queryFn: () => api.list.get(),
   });
+
+  const uploading = uploadProgress.total !== 0;
 
   return (
     <Flex className="center" direction="column" gap="lg">
@@ -45,7 +46,7 @@ export default function App() {
           onChange={async (files) => {
             if (!files) return;
 
-            setUploading(true);
+            setUploadProgress({ loaded: 0, total: files.length });
 
             try {
               await uploadFiles(api, files, {
@@ -61,7 +62,10 @@ export default function App() {
               if (error instanceof Error) setUploadError(error.message ?? "Unknown error");
             }
 
-            setUploading(false);
+            setUploadProgress((prev) => ({
+              loaded: prev.loaded,
+              total: 0,
+            }));
           }}
         />
       )}

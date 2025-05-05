@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aperturerobotics/chonky": "^0.3.1",
+    "@aperturerobotics/chonky-icon-fontawesome": "^0.3.1",
     "@elysiajs/eden": "^1.2.0",
     "@mantine/carousel": "^7.17.7",
     "@mantine/charts": "^7.17.7",
@@ -32,8 +34,6 @@
     "@tiptap/react": "^2.11.9",
     "@tiptap/starter-kit": "^2.11.9",
     "better-auth": "^1.2.7",
-    "chonky": "^2.3.2",
-    "chonky-icon-fontawesome": "^2.3.2",
     "dayjs": "^1.11.13",
     "embla-carousel-react": "^8.6.0",
     "postcss": "^8.5.3",

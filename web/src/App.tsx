@@ -1,9 +1,14 @@
-import { Alert, Anchor, FileInput, Flex, Loader, Title } from "@mantine/core";
-import { useAppContext } from "./contexts/APIContext";
-import { uploadFiles } from "./lib/api";
+import { Alert, Box, FileInput, Flex, Loader, Title } from "@mantine/core";
+
+import { FullFileBrowser } from "@aperturerobotics/chonky";
+import { ChonkyIconTabler } from "./lib/chonkyIcons";
 
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+
+import { useAppContext } from "./contexts/APIContext";
+import { uploadFiles } from "./lib/api";
+
 import "./css/center.css";
 
 export default function App() {
@@ -71,22 +76,25 @@ export default function App() {
       )}
 
       {files.isFetched && (
-        <Flex direction="column" gap="sm">
-          {(files.data!.data || []).map((file) => (
-            <Title order={4} key={file.key}>
-              <Anchor href={file.url} target="_blank" rel="noopener noreferrer" download={file.key.split("/").pop()} size="sm">
-                {file.key.split("/").pop()}
-              </Anchor>
-              - {file.size} bytes -{" "}
-              <Anchor
-                href={`${import.meta.env.VITE_IMAGE_THUMBNAIL_SERVER_URL}?url=${encodeURIComponent(file.url)}&format=${file.key.split(".").pop()}`}
-                target="_blank"
-                rel="noopener noreferrer">
-                Thumbnail
-              </Anchor>
-            </Title>
-          ))}
-        </Flex>
+        <Box w="90%" h="50vh">
+          <FullFileBrowser
+            files={
+              files.data!.data?.map((file) => ({
+                id: file.key,
+                name: file.key.split("/").pop() ?? file.key,
+                ext: file.key.split(".").pop(),
+                thumbnailUrl: `${import.meta.env.VITE_IMAGE_THUMBNAIL_SERVER_URL}?url=${encodeURIComponent(file.url)}&format=${file.key
+                  .split(".")
+                  .pop()}`,
+              })) || []
+            }
+            fileActions={[{ id: "" }]}
+            darkMode={true}
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            iconComponent={ChonkyIconTabler}
+          />
+        </Box>
       )}
     </Flex>
   );

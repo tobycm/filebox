@@ -5,7 +5,10 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router";
 
+// import "98.css/dist/98.css";
+
 import "@mantine/core/styles.css";
+import "@mantine/dropzone/styles.css";
 
 import App from "./App.tsx";
 import Redirect from "./components/Redirect.tsx";
